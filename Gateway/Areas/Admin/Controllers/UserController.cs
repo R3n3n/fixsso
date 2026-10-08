@@ -1,4 +1,5 @@
-﻿using ITELECTIVE_SSO.Data;
+﻿using Gateway.Services;
+using ITELECTIVE_SSO.Data;
 using ITElectiveSSO.Models;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
@@ -13,14 +14,19 @@ namespace Gateway.Areas.Admin.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SsoDbContext _context;
+        private readonly IAuditService _auditService;
 
         public UsersController(
             UserManager<ApplicationUser> userManager,
-            SsoDbContext context)
+            SsoDbContext context,
+            IAuditService auditService)
         {
             _userManager = userManager;
             _context = context;
+            _auditService = auditService;
         }
+
+        private string? GetClientIp() => HttpContext?.Connection?.RemoteIpAddress?.ToString();
 
         // GET: /Admin/Users
         public async Task<IActionResult> Index(int page = 1)
@@ -110,6 +116,12 @@ namespace Gateway.Areas.Admin.Controllers
 
             if (result.Succeeded)
             {
+                await _auditService.LogActionAsync(
+                    user.Id,
+                    "UserCreated",
+                    $"User '{user.Email}' was created by an administrator.",
+                    GetClientIp());
+
                 return isAjax
                     ? Json(new { success = true })
                     : RedirectToAction(nameof(Index));
@@ -156,6 +168,12 @@ namespace Gateway.Areas.Admin.Controllers
             user.IsActive = false;
             await _userManager.UpdateAsync(user);
 
+            await _auditService.LogActionAsync(
+                user.Id,
+                "UserDeleted",
+                $"User '{user.Email}' was deleted (deactivated) by an administrator.",
+                GetClientIp());
+
             return RedirectToAction(nameof(Index));
         }
 
@@ -172,6 +190,14 @@ namespace Gateway.Areas.Admin.Controllers
 
             user.IsActive = !user.IsActive;
             await _userManager.UpdateAsync(user);
+
+            await _auditService.LogActionAsync(
+                user.Id,
+                user.IsActive ? "UserActivated" : "UserSuspended",
+                user.IsActive
+                    ? $"User '{user.Email}' was re-activated by an administrator."
+                    : $"User '{user.Email}' was suspended by an administrator.",
+                GetClientIp());
 
             bool isAjax = Request.Headers["X-Requested-With"] == "XMLHttpRequest";
 

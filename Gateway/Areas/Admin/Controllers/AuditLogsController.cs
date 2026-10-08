@@ -41,8 +41,6 @@ namespace Gateway.Areas.Admin.Controllers
             ViewData["ToDate"] = toDate?.ToString("yyyy-MM-dd");
 
             return View(logs);
-
-            return View(new PaginatedList<AuditLog>(new List<AuditLog>(), 0, 1, PageSize));
         }
     }
 }

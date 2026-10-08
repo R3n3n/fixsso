@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Gateway.Areas.Admin.Controllers;
+using Gateway.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Xunit;
@@ -173,7 +174,7 @@ namespace Tests
         {
             // arrange
             var (userManager, context) = BuildServices(Guid.NewGuid().ToString());
-            var controller = new UsersController(userManager, context)
+            var controller = new UsersController(userManager, context, new AuditService(context))
             {
                 ControllerContext = new ControllerContext
                 {
@@ -199,6 +200,67 @@ namespace Tests
             Assert.Contains("audittest@example.com", log!.Details);
         }
 
+
+
+        private static UsersController BuildController(UserManagerBundle b)
+        {
+            return new UsersController(b.UserManager, b.Context, new AuditService(b.Context))
+            {
+                ControllerContext = new ControllerContext
+                {
+                    HttpContext = new DefaultHttpContext()
+                }
+            };
+        }
+
+        private record UserManagerBundle(UserManager<ApplicationUser> UserManager, SsoDbContext Context);
+
+        [Fact]
+        public async Task Create_Post_CreatesAuditLogEntry()
+        {
+            var (userManager, context) = BuildServices(Guid.NewGuid().ToString());
+            var controller = BuildController(new UserManagerBundle(userManager, context));
+
+            await controller.Create("created@example.com", "Password123", "Password123");
+
+            var created = await userManager.FindByEmailAsync("created@example.com");
+            var log = await context.AuditLogs
+                .SingleOrDefaultAsync(a => a.Action == "UserCreated" && a.UserId == created!.Id);
+
+            Assert.NotNull(log);
+            Assert.Contains("created@example.com", log!.Details);
+        }
+
+        [Fact]
+        public async Task Delete_Post_CreatesAuditLogEntry()
+        {
+            var (userManager, context) = BuildServices(Guid.NewGuid().ToString());
+            var controller = BuildController(new UserManagerBundle(userManager, context));
+            var user = new ApplicationUser { UserName = "del@example.com", Email = "del@example.com", IsActive = true };
+            await userManager.CreateAsync(user, "Password123");
+
+            await controller.Delete(user.Id);
+
+            var log = await context.AuditLogs
+                .SingleOrDefaultAsync(a => a.Action == "UserDeleted" && a.UserId == user.Id);
+            Assert.NotNull(log);
+            Assert.Contains("del@example.com", log!.Details);
+        }
+
+        [Fact]
+        public async Task ToggleActive_Post_LogsSuspendedThenActivated()
+        {
+            var (userManager, context) = BuildServices(Guid.NewGuid().ToString());
+            var controller = BuildController(new UserManagerBundle(userManager, context));
+            var user = new ApplicationUser { UserName = "tog@example.com", Email = "tog@example.com", IsActive = true };
+            await userManager.CreateAsync(user, "Password123");
+
+            await controller.ToggleActive(user.Id);   // active -> suspended
+            await controller.ToggleActive(user.Id);   // suspended -> active
+
+            Assert.NotNull(await context.AuditLogs.SingleOrDefaultAsync(a => a.Action == "UserSuspended" && a.UserId == user.Id));
+            Assert.NotNull(await context.AuditLogs.SingleOrDefaultAsync(a => a.Action == "UserActivated" && a.UserId == user.Id));
+        }
 
     }
 }
