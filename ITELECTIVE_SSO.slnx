@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="Data/Data.csproj" />
+  <Project Path="Gateway/Gateway.csproj" />
+  <Project Path="MockClient/MockClient.csproj" />
+  <Project Path="Models/Models.csproj" />
+  <Project Path="Tests.Integration/Tests.Integration.csproj" />
+  <Project Path="Tests/Tests.csproj" />
+</Solution>

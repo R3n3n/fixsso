@@ -1,0 +1,38 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mock Client App</title>
+    <link rel="stylesheet" href="/css/site.css" />
+</head>
+<body>
+    <header class="topbar">
+        <div class="brand"><span class="brand-mark">M</span> Mock Client App</div>
+    </header>
+
+    <main class="container">
+        <div id="notice" class="notice hidden" role="alert"></div>
+
+        <section id="logged-out" class="card center hidden">
+            <div class="card-icon">&#128274;</div>
+            <h2>Welcome</h2>
+            <p class="muted">You are not signed in. Use your SSO account to continue.</p>
+            <a class="btn btn-primary" href="/login">Login with SSO</a>
+        </section>
+
+        <section id="logged-in" class="card hidden">
+            <span class="pill">Signed in</span>
+            <dl class="details">
+                <div class="row"><dt>Email</dt><dd id="email"></dd></div>
+                <div class="row"><dt>App</dt><dd id="tenant-app"></dd></div>
+                <div class="row"><dt>Groups</dt><dd id="groups"></dd></div>
+                <div class="row"><dt>Levels</dt><dd><pre id="levels"></pre></dd></div>
+            </dl>
+            <button class="btn btn-secondary" id="logout-btn">Log out</button>
+        </section>
+    </main>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>

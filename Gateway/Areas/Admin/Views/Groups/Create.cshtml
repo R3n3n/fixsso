@@ -1,0 +1,113 @@
+﻿@model Gateway.Areas.Admin.Models.GroupViewModel
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Create Group";
+}
+
+<style>
+    body {
+        background-color: #f0f4f9;
+    }
+
+    .dark-header {
+        background-color: #101625 !important;
+        border-radius: 10px;
+        color: #ffffff;
+        padding: 16px 24px;
+    }
+
+    .dark-card {
+        background-color: #101625 !important;
+        border-radius: 10px;
+        border: none;
+        color: #ffffff;
+    }
+
+    .form-dark-input {
+        background-color: #ffffff;
+        border: 1px solid #ced4da;
+        color: #000000;
+        border-radius: 6px;
+        padding: 10px 14px;
+    }
+
+    .form-dark-select {
+        background-color: #ffffff;
+        border: 1px solid #ced4da;
+        color: #000000;
+        border-radius: 6px;
+        padding: 10px 14px;
+    }
+
+    .btn-azure-submit {
+        background-color: #0088cc;
+        color: #ffffff;
+        border: none;
+        font-weight: 600;
+        padding: 8px 24px;
+        border-radius: 5px;
+    }
+
+        .btn-azure-submit:hover {
+            background-color: #0077b5;
+            color: #ffffff;
+        }
+
+    .btn-cancel-red {
+        background-color: #e55353;
+        color: #ffffff;
+        border: none;
+        font-weight: 600;
+        padding: 8px 24px;
+        border-radius: 5px;
+        text-decoration: none;
+    }
+
+        .btn-cancel-red:hover {
+            background-color: #d93737;
+            color: #ffffff;
+        }
+</style>
+
+<div class="container-fluid px-4 py-3">
+    <!-- Header -->
+    <div class="dark-header mb-3 shadow-sm">
+        <h3 class="fw-bold mb-0">Create Group</h3>
+    </div>
+
+    <!-- Form Card -->
+    <div class="dark-card p-4 shadow w-100">
+        <form asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <div class="mb-4">
+                <label asp-for="TenantAppId" class="form-label fw-bold text-white mb-2">Tenant App</label>
+                <select asp-for="TenantAppId" asp-items="Model.TenantApps" class="form-select form-dark-select">
+                    <option value="">-- Select App --</option>
+                </select>
+                <span asp-validation-for="TenantAppId" class="text-danger small mt-1 d-block"></span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="Name" class="form-label fw-bold text-white mb-2">Group Name</label>
+                <input asp-for="Name" class="form-control form-dark-input" placeholder="e.g. Admin" required />
+                <span asp-validation-for="Name" class="text-danger small mt-1 d-block"></span>
+                <div class="form-text text-secondary mt-1">Saved as [AppName]-[GroupName], e.g. "SalesApp-Admin".</div>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="PowerLevel" class="form-label fw-bold text-white mb-2">Power Level</label>
+                <input asp-for="PowerLevel" type="number" class="form-control form-dark-input" value="0" required />
+                <span asp-validation-for="PowerLevel" class="text-danger small mt-1 d-block"></span>
+                <div class="form-text text-secondary mt-1">0 = highest power, higher numbers = less power.</div>
+            </div>
+
+            <div class="d-flex align-items-center gap-2 pt-2">
+                <button type="submit" class="btn btn-azure-submit">Create</button>
+                <a asp-action="Index" class="btn btn-cancel-red">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,38 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Signing in...</title>
+    <link rel="stylesheet" href="/css/site.css" />
+</head>
+<body>
+    <header class="topbar">
+        <div class="brand"><span class="brand-mark">M</span> Mock Client App</div>
+    </header>
+
+    <main class="container">
+        <section class="card center">
+            <div id="spinner" class="spinner"></div>
+            <h2 id="title">Signing you in...</h2>
+            <p id="message" class="muted">Please wait a moment.</p>
+            <a id="back-link" class="btn btn-primary hidden" href="/">Back to home</a>
+        </section>
+    </main>
+
+    <script>
+        const token = new URLSearchParams(window.location.search).get('token');
+
+        if (token) {
+            sessionStorage.setItem('sso_token', token);
+            // replace() so the URL containing the token is not left in the browser history
+            window.location.replace('/');
+        } else {
+            document.getElementById('spinner').classList.add('hidden');
+            document.getElementById('title').textContent = 'Sign-in failed';
+            document.getElementById('message').textContent = 'No token was received from the SSO Gateway.';
+            document.getElementById('back-link').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "New Profile",
+    "Projects": [
+      {
+        "Path": "Gateway\\Gateway.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "MockClient\\MockClient.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]

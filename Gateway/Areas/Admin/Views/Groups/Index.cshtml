@@ -1,0 +1,222 @@
+﻿@model IEnumerable<ITElectiveSSO.Models.Group>
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Groups";
+}
+
+<style>
+    body {
+        background-color: #f0f4f9;
+    }
+
+    .dark-header {
+        background-color: #101625 !important;
+        border-radius: 10px;
+        color: #ffffff;
+        padding: 16px 24px;
+    }
+
+    .dark-card {
+        background-color: #101625 !important;
+        border-radius: 10px;
+        border: none;
+        color: #ffffff;
+    }
+
+    .custom-dark-table {
+        width: 100%;
+        color: #ffffff;
+        background-color: transparent !important;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+        .custom-dark-table th {
+            color: #8a99ad;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #232d3f;
+            padding: 16px 12px;
+            background-color: transparent !important;
+        }
+
+        .custom-dark-table td {
+            border-bottom: 1px solid #1a2232;
+            padding: 16px 12px;
+            vertical-align: middle;
+            color: #d1d5db;
+            background-color: transparent !important;
+        }
+
+    .btn-azure {
+        background-color: #0088cc;
+        color: #ffffff;
+        border: none;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+        .btn-azure:hover {
+            background-color: #0077b5;
+            color: #ffffff;
+        }
+
+    .btn-action-edit {
+        background-color: #0088cc;
+        color: #ffffff;
+        border: none;
+        padding: 6px 18px;
+        border-radius: 5px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+        .btn-action-edit:hover {
+            background-color: #0077b5;
+            color: #ffffff;
+        }
+
+    .btn-action-delete {
+        background-color: #e55353;
+        color: #ffffff;
+        border: none;
+        padding: 6px 18px;
+        border-radius: 5px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+        .btn-action-delete:hover {
+            background-color: #d93737;
+            color: #ffffff;
+        }
+
+    .search-input-dark {
+        border-radius: 6px;
+        border: none;
+        padding-left: 38px;
+        background-color: #ffffff;
+        color: #000000;
+    }
+
+    .search-icon-inside {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 10;
+        color: #6c757d;
+    }
+
+    .modal-dark-content {
+        background-color: #182030;
+        color: #ffffff;
+        border: 1px solid #2a3447;
+        border-radius: 8px;
+    }
+
+    .btn-modal-cancel {
+        background-color: #6c757d;
+        color: #ffffff;
+        border: none;
+    }
+
+    .btn-modal-delete {
+        background-color: #e55353;
+        color: #ffffff;
+        border: none;
+    }
+</style>
+
+<div class="container-fluid px-4 py-3">
+    <!-- Header -->
+    <div class="dark-header mb-3 shadow-sm">
+        <h3 class="fw-bold mb-0">Groups</h3>
+    </div>
+
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="alert alert-danger alert-dismissible fade show mb-3" role="alert">
+            <div asp-validation-summary="All" class="mb-0 fw-medium"></div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Content Card -->
+    <div class="dark-card p-4 shadow">
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom border-secondary border-opacity-25">
+            <form method="get" asp-action="Index" class="position-relative" style="width: 320px;">
+                <i class="bi bi-search search-icon-inside"></i>
+                <input type="text" name="searchString" value="@ViewBag.SearchString" class="form-control search-input-dark" placeholder="Search by Group Name">
+            </form>
+            <a asp-action="Create" class="btn btn-azure px-3 py-2 rounded-2">+ Create New Group</a>
+        </div>
+
+        <div class="table-responsive">
+            <table class="custom-dark-table align-middle">
+                <thead>
+                    <tr>
+                        <th class="ps-2" style="width: 30%;">APP NAME</th>
+                        <th style="width: 30%;">GROUP NAME</th>
+                        <th style="width: 20%;">POWER LEVEL</th>
+                        <th class="text-end pe-2" style="width: 20%;">ACTIONS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        @foreach (var group in Model)
+                        {
+                            <tr>
+                                <td class="ps-2 fw-medium text-white">@(group.TenantApp?.Name ?? "N/A")</td>
+                                <td class="text-white">@group.Name</td>
+                                <td>@group.PowerLevel</td>
+                                <td class="text-end pe-2">
+                                    <a asp-action="Edit" asp-route-id="@group.Id" class="btn btn-action-edit me-2">Edit</a>
+                                    <button type="button" class="btn btn-action-delete" data-bs-toggle="modal" data-bs-target="#deleteGroupModal-@group.Id">Delete</button>
+
+                                    <!-- Delete Modal -->
+                                    <div class="modal fade text-start" id="deleteGroupModal-@group.Id" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content modal-dark-content shadow-lg">
+                                                <div class="modal-header border-0 pb-0">
+                                                    <h5 class="modal-title fw-bold text-white d-flex align-items-center">
+                                                        <span class="bg-danger text-white rounded-circle d-inline-flex justify-content-center align-items-center me-2" style="width:24px; height:24px; font-size:14px;">!</span> Confirm Deletion
+                                                    </h5>
+                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <p class="mb-0 text-light fw-medium">
+                                                        Are you sure you want to delete this Group?<br />
+                                                        <span class="text-secondary small">This action cannot be undone.</span>
+                                                    </p>
+                                                </div>
+                                                <div class="modal-footer border-0 pt-0">
+                                                    <button type="button" class="btn btn-modal-cancel px-3" data-bs-dismiss="modal">Cancel</button>
+                                                    <form asp-action="Delete" asp-route-id="@group.Id" method="post" class="d-inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <button type="submit" class="btn btn-modal-delete px-3">Delete</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="4" class="text-center text-white py-4">No groups found.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
