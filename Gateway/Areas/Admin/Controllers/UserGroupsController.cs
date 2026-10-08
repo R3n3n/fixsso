@@ -1,4 +1,5 @@
 ﻿using Gateway.Areas.Admin.Models;
+using Gateway.Services;
 using ITELECTIVE_SSO.Data;
 using ITElectiveSSO.Models;
 using Microsoft.AspNetCore.Identity;
@@ -13,12 +14,19 @@ namespace Gateway.Areas.Admin.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SsoDbContext _context;
+        private readonly IAuditService _auditService;
 
-        public UserGroupsController(UserManager<ApplicationUser> userManager, SsoDbContext context)
+        public UserGroupsController(
+            UserManager<ApplicationUser> userManager,
+            SsoDbContext context,
+            IAuditService auditService)
         {
             _userManager = userManager;
             _context = context;
+            _auditService = auditService;
         }
+
+        private string? GetClientIp() => HttpContext?.Connection?.RemoteIpAddress?.ToString();
 
         [HttpGet("Available")]
         public async Task<IActionResult> Available(string userId)
@@ -100,6 +108,12 @@ namespace Gateway.Areas.Admin.Controllers
 
             await _context.SaveChangesAsync();
 
+            await _auditService.LogActionAsync(
+                userId,
+                "GroupAssigned",
+                $"User '{user.Email}' was assigned to group '{group.Name}' by an administrator.",
+                GetClientIp());
+
             return Ok(new { success = true, message = $"User assigned to group '{group.Name}'." });
         }
 
@@ -115,8 +129,17 @@ namespace Gateway.Areas.Admin.Controllers
                 return NotFound();
             }
 
+            var user = await _userManager.FindByIdAsync(userId);
+            var group = await _context.Groups.FindAsync(groupId);
+
             _context.UserGroups.Remove(userGroup);
             await _context.SaveChangesAsync();
+
+            await _auditService.LogActionAsync(
+                userId,
+                "GroupUnassigned",
+                $"User '{user?.Email ?? userId}' was removed from group '{group?.Name ?? groupId.ToString()}' by an administrator.",
+                GetClientIp());
 
             return Ok(new { success = true });
         }

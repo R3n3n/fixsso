@@ -1,5 +1,6 @@
 ﻿using Gateway.Areas.Admin.Controllers;
 using Gateway.Areas.Admin.Models;
+using Gateway.Services;
 using ITElectiveSSO.Models;
 using ITELECTIVE_SSO.Data;
 using Microsoft.AspNetCore.Http;
@@ -49,7 +50,7 @@ namespace Tests
 
         private static UserGroupsController CreateController(UserManager<ApplicationUser> userManager, SsoDbContext context)
         {
-            return new UserGroupsController(userManager, context)
+            return new UserGroupsController(userManager, context, new AuditService(context))
             {
                 TempData = new TempDataDictionary(new DefaultHttpContext(), new NoopTempDataProvider())
             };
@@ -127,5 +128,39 @@ namespace Tests
 
             Assert.Equal(1, assignedCount);
         }
+
+        [Fact]
+        public async Task Assign_CreatesAuditLogEntry()
+        {
+            var (userManager, context) = BuildServices(Guid.NewGuid().ToString());
+            var (user, group1, _) = await SeedUserAndGroups(userManager, context);
+            var controller = CreateController(userManager, context);
+
+            await controller.Assign(user.Id, new AssignGroupViewModel { GroupId = group1.Id });
+
+            var log = await context.AuditLogs
+                .SingleOrDefaultAsync(a => a.Action == "GroupAssigned" && a.UserId == user.Id);
+
+            Assert.NotNull(log);
+            Assert.Contains("SalesApp-Admin", log!.Details);
+        }
+
+        [Fact]
+        public async Task Unassign_CreatesAuditLogEntry()
+        {
+            var (userManager, context) = BuildServices(Guid.NewGuid().ToString());
+            var (user, group1, _) = await SeedUserAndGroups(userManager, context);
+            var controller = CreateController(userManager, context);
+
+            await controller.Assign(user.Id, new AssignGroupViewModel { GroupId = group1.Id });
+            await controller.Unassign(user.Id, group1.Id);
+
+            var log = await context.AuditLogs
+                .SingleOrDefaultAsync(a => a.Action == "GroupUnassigned" && a.UserId == user.Id);
+
+            Assert.NotNull(log);
+            Assert.Contains("SalesApp-Admin", log!.Details);
+        }
+
     }
 }
